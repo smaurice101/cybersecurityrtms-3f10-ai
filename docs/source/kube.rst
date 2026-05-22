@@ -1,7 +1,7 @@
-Scaling [--solutionname--] With Kubernetes
+Scaling [cybersecurityrtms-3f10-ai] With Kubernetes
 ===========================
 
-Generated On: --datetime-- UTC
+Generated On: 2026-05-22 21:03:15 UTC
 
 You can scale your solution with Kubernetes.  To do so, will will need to apply the following YAML files to your Kubernetes cluster.
 
@@ -35,13 +35,13 @@ You can scale your solution with Kubernetes.  To do so, will will need to apply 
    sudo systemctl restart docker
 
 
-Based on your TML solution [--solutionname--] - if you want to scale your application with Kubernetes - you will need to apply the following YAML files.
+Based on your TML solution [cybersecurityrtms-3f10-ai] - if you want to scale your application with Kubernetes - you will need to apply the following YAML files.
 
 .. list-table::
 
    * - **YML File**
      - **Description**
-   * - :ref:`--solutionnamefile--`
+   * - :ref:`cybersecurityrtms-3f10-ai.yml`
      - This is your main solution YAML file.  
  
        It MUST be applied to your Kubernetes cluster.
@@ -75,10 +75,10 @@ Based on your TML solution [--solutionname--] - if you want to scale your applic
        This is OPTIONAL.  However, it must be 
  
        applied if using Step 9 DAG.
-   * - :ref:`nginx-ingress---nginxname--.yml`
+   * - :ref:`nginx-ingress-cybersecurityrtms-3f10-ai.yml`
      - If you are scaling your TML solution you must
 
-       apply the nginx-ingress--nginxname--.yml; this yaml is 
+       apply the nginx-ingresscybersecurityrtms-3f10-ai.yml; this yaml is 
 
        auto-generated for every TML solution.
 
@@ -94,15 +94,15 @@ kubectl Apply command
 
 .. code-block:: YAML
 
-   --kubectl--
+   kubectl apply -f kafka.yml -f secrets.yml -f mysql-storage.yml -f mysql-db-deployment.yml -f qdrant.yml -f privategpt.yml -f cybersecurityrtms-3f10-ai.yml
 
---solutionnamefile--
+cybersecurityrtms-3f10-ai.yml
 ------------------------
 
 .. important::
-   Copy and Paste this YAML file: --solutionnamefile-- - and save it locally.
+   Copy and Paste this YAML file: cybersecurityrtms-3f10-ai.yml - and save it locally.
 
-   These YML files can also be found on GitHub at: --gityml--
+   These YML files can also be found on GitHub at: https://github.com/smaurice101/raspberrypitss/tree/main/tml-airflow/dags/tml-solutions/cybersecurityrtms-3f10/ymls/cybersecurityrtms-3f10-ai
 
 .. attention::
 
@@ -120,8 +120,276 @@ kubectl Apply command
 
 .. code-block:: YAML
 
-   ################# --solutionnamefile--
-   --solutionnamecode--
+   ################# cybersecurityrtms-3f10-ai.yml
+   
+     apiVersion: apps/v1
+     kind: Deployment
+     metadata:
+       name: cybersecurityrtms-3f10-ai
+     spec:
+       selector:
+         matchLabels:
+           app: cybersecurityrtms-3f10-ai
+       replicas: 3 # tells deployment to run 1 pods matching the template
+       template:
+         metadata:
+           labels:
+             app: cybersecurityrtms-3f10-ai
+         spec:
+           containers:
+           - name: cybersecurityrtms-3f10-ai
+             image: maadsdocker/cybersecurityrtms-3f10-ai-amd64:latest
+             volumeMounts:
+             - name: dockerpath
+               mountPath: /var/run/docker.sock
+             - name: rawdata
+               mountPath: /rawdata   # container folder where the local folder will be mounted                           
+             ports:
+             - containerPort: 5050
+             - containerPort: 4040
+             - containerPort: 6060
+             env:
+             - name: TSS
+               value: '0'
+             - name: PROJECTNAME
+               value: 'cybersecurityrtms-3f10'                              
+             - name: SOLUTIONNAME
+               value: 'cybersecurityrtms-3f10-ai'
+             - name: SOLUTIONDAG
+               value: 'solution_preprocessing_ai_dag-cybersecurityrtms-3f10'
+             - name: GITUSERNAME
+               value: 'smaurice101'
+             - name: GITREPOURL
+               value: 'https://github.com/smaurice101/raspberrypitss.git'
+             - name: SOLUTIONEXTERNALPORT
+               value: '5050'
+             - name: CHIP
+               value: 'amd64'
+             - name: SOLUTIONAIRFLOWPORT
+               value: '4040'
+             - name: SOLUTIONVIPERVIZPORT
+               value: '6060'
+             - name: DOCKERUSERNAME
+               value: 'maadsdocker'
+             - name: CLIENTPORT
+               value: '0'
+             - name: EXTERNALPORT
+               value: '39399'
+             - name: KAFKACLOUDUSERNAME
+               value: ''
+             - name: VIPERVIZPORT
+               value: '9689'
+             - name: MQTTUSERNAME
+               value: 'smaurice'
+             - name: AIRFLOWPORT
+               value: '9000'
+             - name: GITPASSWORD
+               valueFrom:
+                 secretKeyRef:
+                  name: tmlsecrets 
+                  key: githubtoken                       
+             - name: KAFKACLOUDPASSWORD
+               valueFrom:
+                 secretKeyRef:
+                  name: tmlsecrets 
+                  key: kafkacloudpassword                      
+             - name: MQTTPASSWORD
+               valueFrom: 
+                 secretKeyRef:
+                   name: tmlsecrets 
+                   key: mqttpass                        
+             - name: READTHEDOCS
+               valueFrom:
+                 secretKeyRef:
+                   name: tmlsecrets 
+                   key: readthedocs          
+             - name: qip 
+               value: 'privategpt-service' # This is private GPT service in kubernetes
+             - name: KUBE
+               value: '1'
+             - name: step3localfileinputfile # STEP 3 localfile inputfile field can be adjusted here.
+               value: '/rawdatademo/cisco_network_data.txt'
+             - name: step3localfiledocfolder # STEP 3 # STEP 3 docfolder inputfile field can be adjusted here.
+               value: 'mylogs,mylogs2'               
+             - name: step4maxrows # STEP 4 maxrows field can be adjusted here.  Higher the number more data to process, BUT more memory needed.
+               value: '50'
+             - name: step4bmaxrows # STEP 4b maxrows field can be adjusted here.  Higher the number more data to process, BUT more memory needed.
+               value: '-1'               
+             - name: step4cmaxrows # STEP 4c maxrows field can be adjusted here.  Higher the number more data to process, BUT more memory needed.
+               value: '200'               
+             - name: step4crawdatatopic # STEP 4c
+               value: 'iot-preprocess'               
+             - name: step4csearchterms # STEP 4c 
+               value: 'rgx:p([a-z]+)ch ~~~ |authentication failure,--entity-- password failure ~~~ |unknown--entity--'               
+             - name: step4crememberpastwindows # STEP 4c 
+               value: '500'               
+             - name: step4cpatternwindowthreshold # STEP 4c 
+               value: '30'               
+             - name: step4crtmsscorethreshold # STEP 4c 
+               value: '0.6' 
+             - name: step4cattackscorethreshold # STEP 4c 
+               value: '0.6' 
+             - name: step4cpatternscorethreshold # STEP 4c 
+               value: '0.6'                
+             - name: step4crtmsstream # STEP 4c 
+               value: 'rtms-stream-mylogs'                              
+             - name: step4clocalsearchtermfolder # STEP 4c 
+               value: '|mysearchfile1,|mysearchfile2'                              
+             - name: step4clocalsearchtermfolderinterval # STEP 4c 
+               value: '60'                                                            
+             - name: step4crtmsfoldername # STEP 4c 
+               value: 'rtms2'                                                                           
+             - name: step4crtmsmaxwindows # STEP 4c adjust RTMSMAXWINDOWS for Step 4c
+               value: '1000000'                                       
+             - name: step2raw_data_topic # STEP 2 
+               value: 'iot-raw-data,rtms-stream-mylogs,rtms-stream-mylogs2'                           
+             - name: step2preprocess_data_topic # STEP 2 
+               value: 'iot-preprocess,iot-preprocess2,rtms-preprocess,attacktopic,rtmstopic,patterntopic'                           
+             - name: step4raw_data_topic # STEP 4
+               value: 'iot-raw-data'                           
+             - name: step4preprocess_data_topic # STEP 4
+               value: 'iot-preprocess'                                                         
+             - name: step4preprocesstypes # STEP 4
+               value: 'anomprob,trend,avg'                                                         
+             - name: step4jsoncriteria # STEP 4
+               value: 'uid=hostName,filter:allrecords~subtopics=hostName,hostName,hostName~values=inboundpackets,outboundpackets,pingStatus~identifiers=inboundpackets,outboundpackets,pingStatus~datetime=lastUpdated~msgid=~latlong='                           
+             - name: step4ajsoncriteria # STEP 4a 
+               value: 'uid=tactic,filter:allrecords~subtopics=technique,technique,technique~values=FinalAttackScore,FinalPatternScore,RTMSSCORE~identifiers=FinalAttackScore,FinalPatternScore,RTMSSCORE~datetime=TimeStamp~msgid=Entity,PartitionOffsetFound,NumAttackWindowsFound,NumPatternWindowsFound,SearchEntity,rtmsfolder,CurrentRTMSMAXWINDOW~latlong='                           
+             - name: step4amaxrows # STEP 4a
+               value: '50'                           
+             - name: step4apreprocesstypes # STEP 4a
+               value: 'avg'                           
+             - name: step4araw_data_topic # STEP 4a
+               value: 'rtms-pgpt-ai'                           
+             - name: step4apreprocess_data_topic # STEP 4a
+               value: 'rtms-pgpt-ai-mitre'                           
+             - name: step4bpreprocesstypes # STEP 4b
+               value: ''                           
+             - name: step4bjsoncriteria # STEP 4b
+               value: ''                           
+             - name: step4braw_data_topic # STEP 4b 
+               value: ''                           
+             - name: step4bpreprocess_data_topic # STEP 4b 
+               value: ''                                          
+             - name: step5rollbackoffsets # STEP 5 rollbackoffsets field can be adjusted here.  Higher the number more training data to process, BUT more memory needed.
+               value: '-1'                              
+             - name: step5processlogic # STEP 5 processlogic field can be adjusted here.  
+               value: ''                                                
+             - name: step5independentvariables # STEP 5 independent variables can be adjusted here.  
+               value: ''                                                                              
+             - name: step6maxrows # STEP 6 maxrows field can be adjusted here.  Higher the number more predictions to make, BUT more memory needed.
+               value: '-1'                              
+             - name: step9rollbackoffset # STEP 9 rollbackoffset field can be adjusted here.  Higher the number more information sent to privateGPT, BUT more memory needed.
+               value: '5'                  
+             - name: step9prompt # STEP 9 Enter PGPT prompt
+               value: '[INST] Are there any errors or suspicious activity in the log messages found? Give a detailed response, and any resolutions that need to be done. Also, Can you give me the MITRE ATT&CK tactic and technique classification for these messages?[/INST]'                  
+             - name: step9context # STEP 9 Enter PGPT context
+               value: 'This data are from network log files. This log file data have been filtered using the search terms shown in the messages. The filtered messages may indicate potential suspicious log entries that could indicate a cyber attack.'                                 
+             - name: step9keyattribute
+               value: '' # Step 9 key attribtes change as needed  
+             - name: step9keyprocesstype
+               value: '' # Step 9 key processtypes change as needed                                               
+             - name: step9hyperbatch
+               value: '0' # Set to 1 if you want to batch all of the hyperpredictions and sent to chatgpt, set to 0, if you want to send it one by one   
+             - name: step9vectordbcollectionname
+               value: 'tml-llm-model-v2'   # collection name in Qdrant
+             - name: step9concurrency # privateGPT concurency, if greater than 1, multiple PGPT will run
+               value: '2'
+             - name: CUDA_VISIBLE_DEVICES
+               value: '0' # 0 for any device or specify specific number                
+             - name: step9docfolder # privateGPT docfolder to load files in Qdrant vectorDB local context
+               value: ''
+             - name: step9docfolderingestinterval # privateGPT docfolderingestinterval, number of seconds to wait before reloading files in docfolder
+               value: '900'
+             - name: step9useidentifierinprompt # privateGPT useidentifierinprompt, if 1, add TML output json field Identifier, if 0 use prompt
+               value: '1'                              
+             - name: step9searchterms # privateGPT searchterms, terms to search for in the chat response
+               value: ''                                             
+             - name: step9streamall # privateGPT streamall, if 1, stream all responses, even if search terms are missing, 0, if response contains search terms
+               value: '1'                                                            
+             - name: step9temperature # privateGPT LLM temperature between 0 and 1 i.e. 0.3, if 0, LLM model is conservative, if 1 it hallucinates
+               value: '0.1'                                             
+             - name: step9vectorsearchtype # privateGPT for QDrant VectorDB similarity search.  Must be either Cosine, Manhattan, Dot, Euclid
+               value: 'Manhattan'                                                                           
+             - name: step9contextwindowsize # context window size
+               value: '4096'                                                                                          
+             - name: step9pgptcontainername # privateGPT container name
+               value: 'maadsdocker/tml-privategpt-with-gpu-nvidia-amd64-v2'                    
+             - name: step9pgpthost # privateGPT host ip i.e.: http://127.0.0.1
+               value: 'http://127.0.0.1'                    
+             - name: step9pgptport # privateGPT port i.e. 8001
+               value: '8001'                                                  
+             - name: step9vectordimension # privateGPT vector dimension
+               value: '768'                                                                 
+             - name: step9brollbackoffset
+               value: ''
+             - name: step9bdeletevectordbcount
+               value: ''
+             - name: step9bvectordbpath
+               value: ''
+             - name: step9btemperature
+               value: ''
+             - name: step9bvectordbcollectionname
+               value: ''
+             - name: step9bollamacontainername
+               value: ''
+             - name: step9bCUDA_VISIBLE_DEVICES
+               value: ''
+             - name: step9bmainip
+               value: ''
+             - name: step9bmainport
+               value: ''
+             - name: step9bembedding
+               value: ''
+             - name: step9bagents_topic_prompt
+               value: ''
+             - name: step9bteamlead_topic
+               value: ''
+             - name: step9bteamleadprompt
+               value: ''
+             - name: step9bsupervisor_topic
+               value: ''
+             - name: step9bagenttoolfunctions
+               value: ''
+             - name: step9bagent_team_supervisor_topic
+               value: ''                              
+             - name: step9bcontextwindow
+               value: ''                                             
+             - name: step9bagenttopic
+               value: ''                              
+             - name: step9blocalmodelsfolder
+               value: ''                                             
+             - name: step1solutiontitle # STEP 1 solutiontitle field can be adjusted here. 
+               value: 'Entity-Based Real-Time Advanced Cybersecurity Prevention and Monitoring'                              
+             - name: step1description # STEP 1 description field can be adjusted here. 
+               value: 'TML Real-Time Memory of Sliding Time Windows For Advanced Cybersecurity Prevention'                                          
+             - name: KUBEBROKERHOST
+               value: 'kafka-service:9092'         
+             - name: KAFKABROKERHOST
+               value: '127.0.0.1:9092'                              
+           volumes: 
+           - name: dockerpath
+             hostPath:
+               path: /var/run/docker.sock
+           - name: rawdata
+             hostPath:
+               path: /mnt  # CHANGE AS NEEDED TO YOUR LOCAL FOLDER the paths will be specific to your environment
+   ---
+     apiVersion: v1
+     kind: Service
+     metadata:
+       name: cybersecurityrtms-3f10-ai-visualization-service
+       labels:
+         app: cybersecurityrtms-3f10-ai-visualization-service
+     spec:
+       type: ClusterIP
+       ports:
+       - port: 80 # Ingress port, if using port 443 will need to setup TLS certs
+         name: p1
+         protocol: TCP
+         targetPort: 6060
+       selector:
+         app: cybersecurityrtms-3f10-ai
 
 .. tip::
 
@@ -338,7 +606,7 @@ privategpt.yml
           spec:
             containers:
             - name: privategpt
-              image: --kubeprivategpt-- # IF you DO NOT have NVIDIA GPU use: maadsdocker/tml-privategpt-no-gpu-amd64
+              image: maadsdocker/tml-privategpt-with-gpu-nvidia-amd64-v2 # IF you DO NOT have NVIDIA GPU use: maadsdocker/tml-privategpt-no-gpu-amd64
               imagePullPolicy: IfNotPresent  # You can also use Always, Never
               env:
               - name: NVIDIA_VISIBLE_DEVICES
@@ -346,11 +614,11 @@ privategpt.yml
               - name: DP_DISABLE_HEALTHCHECKS
                 value: xids
               - name: WEB_CONCURRENCY
-                value: "--kubeconcur--"
+                value: "2"
               - name: GPU
                 value: "1"
               - name: COLLECTION
-                value: "--kubecollection--"
+                value: "tml-llm-model-v2"
               - name: PORT
                 value: "8001"
               - name: CUDA_VISIBLE_DEVICES
@@ -358,17 +626,17 @@ privategpt.yml
               - name: TOKENIZERS_PARALLELISM
                 value: "false"
               - name: temperature
-                value: "--kubetemperature--"
+                value: "0.1"
               - name: vectorsearchtype
-                value: "--kubevectorsearchtype--"
+                value: "Manhattan"
               - name: contextwindowsize
-                value: "--kubecontextwindowsize--"
+                value: "4096"
               - name: vectordimension
-                value: "--kubevectordimension--"
+                value: "768"
               - name: mainmodel
-                value: "--kubemainmodel--"
+                value: "mistralai/Mistral-7B-Instruct-v0.2"
               - name: mainembedding
-                value: "--kubemainembedding--"
+                value: "BAAI/bge-small-en-v1.5"
               - name: TSS
                 value: "0"
               - name: KUBE
@@ -589,13 +857,13 @@ To visualize the dashboard you need to forward ports to your solution **deployme
 
 .. code-block::
 
-   --kube-portforward--
+   kubectl port-forward deployment/cybersecurityrtms-3f10-ai 6060:6060
 
 After you forward the ports then copy/paste the viusalization URL below and run your dashboard.
 
 .. code-block::
 
-   --visualizationurl--
+   http://localhost:6060/dashboard-rtms-ai-mitre.html?topic=rtms-pgpt-ai-mitre&offset=-1&groupid=&rollbackoffset=400&topictype=prediction&append=0&secure=1
 
 Scaling with NGINX Ingress and Ingress Controller
 -------------------------------------
@@ -646,18 +914,49 @@ All TML solutions will scale with NGINX ingress to perform load-balancing.  But,
 
       minikube tunnel
 
-   **STEP 4:  Apply nginx-ingress---nginxname--.yml to your kubernetes cluster.  First you need to save it locally then apply it:**
+   **STEP 4:  Apply nginx-ingress-cybersecurityrtms-3f10-ai.yml to your kubernetes cluster.  First you need to save it locally then apply it:**
 
-nginx-ingress---nginxname--.yml
+nginx-ingress-cybersecurityrtms-3f10-ai.yml
 -------------
 
    .. code-block::
 
-      --ingress--
+      
+    ############# nginx-ingress-cybersecurityrtms-3f10-ai.yml
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: tml-ingress
+      annotations:
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+    spec:
+      ingressClassName: nginx
+      rules:
+        - host: tml.tss
+          http:
+            paths:
+              - path: /viz(/|$)(.*)
+                pathType: ImplementationSpecific
+                backend:
+                  service:
+                    name: cybersecurityrtms-3f10-ai-visualization-service
+                    port:
+                      number: 80
+    ---
+    apiVersion: v1
+    kind: ConfigMap
+    apiVersion: v1
+    metadata:
+      name: ingress-nginx-controller
+      namespace: ingress-nginx
+    data:
+      allow-snippet-annotations: "true"
+  
 
    .. code-block::
 
-      kubectl apply -f nginx-ingress---nginxname--.yml
+      kubectl apply -f nginx-ingress-cybersecurityrtms-3f10-ai.yml
 
 You are now ready to run the Dashboard using Ingress load balancing.
 
@@ -668,7 +967,7 @@ Copy and paste this URL below in your browser and start streaming.  Because you 
 
 .. code-block::
 
-   --visualizationurling--
+   http://tml.tss/viz/dashboard-rtms-ai-mitre.html?topic=rtms-pgpt-ai-mitre&offset=-1&groupid=&rollbackoffset=400&topictype=prediction&append=0&secure=1
 
 Making Secure TLS Connection with gRPC
 -----------------------
